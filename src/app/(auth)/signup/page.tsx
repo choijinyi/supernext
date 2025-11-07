@@ -127,10 +127,15 @@ export default function SignupPage() {
         router.push('/login');
       } catch (error: any) {
         console.error('Advertiser signup error:', error);
-        const errorMessage = error?.response?.data?.message || error?.message || '회원가입에 실패했습니다.';
+        const errorData = error?.response?.data;
+        const errorMessage = errorData?.error?.message || errorData?.message || error?.message || '회원가입에 실패했습니다.';
+        const errorDetails = errorData?.error?.details;
+        
         toast({
           title: '오류',
-          description: errorMessage,
+          description: errorDetails 
+            ? `${errorMessage}\n${JSON.stringify(errorDetails, null, 2)}`
+            : errorMessage,
           variant: 'destructive',
         });
       }
@@ -155,10 +160,15 @@ export default function SignupPage() {
         router.push('/login');
       } catch (error: any) {
         console.error('Influencer signup error:', error);
-        const errorMessage = error?.response?.data?.message || error?.message || '회원가입에 실패했습니다.';
+        const errorData = error?.response?.data;
+        const errorMessage = errorData?.error?.message || errorData?.message || error?.message || '회원가입에 실패했습니다.';
+        const errorDetails = errorData?.error?.details;
+        
         toast({
           title: '오류',
-          description: errorMessage,
+          description: errorDetails 
+            ? `${errorMessage}\n${JSON.stringify(errorDetails, null, 2)}`
+            : errorMessage,
           variant: 'destructive',
         });
       }

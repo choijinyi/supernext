@@ -20,13 +20,28 @@ export function registerPlatformRoutes(app: Hono<AppEnv>) {
   // ============================================
   app.post(
     '/api/auth/signup/advertiser',
-    zValidator('json', completeAdvertiserSignupSchema),
+    zValidator('json', completeAdvertiserSignupSchema, (result, c) => {
+      if (!result.success) {
+        c.get('logger').error('Validation failed for advertiser signup:', result.error.flatten());
+        return c.json(
+          {
+            error: {
+              code: 'VALIDATION_ERROR',
+              message: '입력 데이터가 올바르지 않습니다',
+              details: result.error.flatten().fieldErrors,
+            },
+          },
+          400
+        );
+      }
+    }),
     async (c) => {
       const data = c.req.valid('json');
       const supabase = c.get('supabase');
       const logger = c.get('logger');
       const service = new PlatformService(supabase, logger);
 
+      logger.info('Advertiser signup request:', { email: data.email });
       const result = await service.signupAdvertiser(data);
       return respond(c, result);
     }
@@ -34,13 +49,28 @@ export function registerPlatformRoutes(app: Hono<AppEnv>) {
 
   app.post(
     '/api/auth/signup/influencer',
-    zValidator('json', completeInfluencerSignupSchema),
+    zValidator('json', completeInfluencerSignupSchema, (result, c) => {
+      if (!result.success) {
+        c.get('logger').error('Validation failed for influencer signup:', result.error.flatten());
+        return c.json(
+          {
+            error: {
+              code: 'VALIDATION_ERROR',
+              message: '입력 데이터가 올바르지 않습니다',
+              details: result.error.flatten().fieldErrors,
+            },
+          },
+          400
+        );
+      }
+    }),
     async (c) => {
       const data = c.req.valid('json');
       const supabase = c.get('supabase');
       const logger = c.get('logger');
       const service = new PlatformService(supabase, logger);
 
+      logger.info('Influencer signup request:', { email: data.email });
       const result = await service.signupInfluencer(data);
       return respond(c, result);
     }
