@@ -1,92 +1,121 @@
-이 프로젝트는 [`EasyNext`](https://github.com/easynext/easynext)를 사용해 생성된 [Next.js](https://nextjs.org) 프로젝트입니다.
+# supernext
 
-## Getting Started
+블로그 체험단 매칭 플랫폼 SaaS
 
-개발 서버를 실행합니다.<br/>
-환경에 따른 명령어를 사용해주세요.
+## 프로젝트 소개
+
+광고주와 인플루언서를 연결하는 체험단 매칭 플랫폼입니다.
+
+### 주요 기능
+
+**인플루언서:**
+- 🏠 체험단 목록 브라우징
+- 📝 체험단 상세 정보 확인 및 지원
+- 📊 내 지원 현황 추적 (신청완료/선정/반려)
+
+**광고주:**
+- ➕ 체험단 등록 및 관리
+- 👥 신청자 목록 확인
+- ✅ 체험단 선정 (일괄 선택)
+- 🔒 모집 종료 기능
+
+## 기술 스택
+
+- **Framework**: Next.js 15 (App Router, Turbopack)
+- **Language**: TypeScript
+- **Backend**: Hono + Supabase
+- **UI**: shadcn-ui + TailwindCSS 4
+- **State Management**: React Query + Zustand
+- **Form**: React Hook Form + Zod
+- **Utils**: date-fns, es-toolkit, ts-pattern
+
+## 시작하기
+
+### 사전 요구사항
+
+- Node.js 20 이상
+- npm 또는 yarn
+- Supabase 프로젝트
+
+### 환경 변수 설정
+
+`.env.local` 파일을 생성하고 다음 변수를 설정하세요:
+
+```env
+# Supabase
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+SUPABASE_URL=your_supabase_project_url
+SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
+```
+
+### 데이터베이스 마이그레이션
+
+Supabase Dashboard → SQL Editor에서 다음 마이그레이션 파일을 실행하세요:
 
 ```bash
+supabase/migrations/0002_create_blog_review_platform_schema.sql
+```
+
+### 설치 및 실행
+
+```bash
+# 의존성 설치
+npm install
+
+# 개발 서버 실행
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+
+# 프로덕션 빌드
+npm run build
+
+# 프로덕션 실행
+npm start
 ```
 
-브라우저에서 [http://localhost:3000](http://localhost:3000)을 열어 결과를 확인할 수 있습니다.
+## 프로젝트 구조
 
-`app/page.tsx` 파일을 수정하여 페이지를 편집할 수 있습니다. 파일을 수정하면 자동으로 페이지가 업데이트됩니다.
-
-## 기본 포함 라이브러리
-
-- [Next.js](https://nextjs.org)
-- [React](https://react.dev)
-- [Tailwind CSS](https://tailwindcss.com)
-- [TypeScript](https://www.typescriptlang.org)
-- [ESLint](https://eslint.org)
-- [Prettier](https://prettier.io)
-- [Shadcn UI](https://ui.shadcn.com)
-- [Lucide Icon](https://lucide.dev)
-- [date-fns](https://date-fns.org)
-- [react-use](https://github.com/streamich/react-use)
-- [es-toolkit](https://github.com/toss/es-toolkit)
-- [Zod](https://zod.dev)
-- [React Query](https://tanstack.com/query/latest)
-- [React Hook Form](https://react-hook-form.com)
-- [TS Pattern](https://github.com/gvergnaud/ts-pattern)
-
-## 사용 가능한 명령어
-
-한글버전 사용
-
-```sh
-easynext lang ko
+```
+src/
+├── app/                      # Next.js App Router
+│   ├── (auth)/              # 인증 관련 페이지
+│   ├── advertiser/          # 광고주 전용 페이지
+│   ├── campaigns/           # 체험단 페이지
+│   └── my/                  # 사용자 페이지
+├── backend/                 # 백엔드 레이어
+│   ├── hono/               # Hono 앱 설정
+│   ├── middleware/         # 미들웨어
+│   └── http/               # HTTP 유틸리티
+├── features/platform/       # 플랫폼 기능
+│   ├── backend/            # API 라우터 & 서비스
+│   ├── components/         # React 컴포넌트
+│   └── hooks/              # React Query hooks
+└── components/ui/           # shadcn-ui 컴포넌트
 ```
 
-최신버전으로 업데이트
+## 주요 페이지
 
-```sh
-npm i -g @easynext/cli@latest
-# or
-yarn add -g @easynext/cli@latest
-# or
-pnpm add -g @easynext/cli@latest
-```
+| 페이지 | 경로 | 설명 |
+|--------|------|------|
+| 홈 | `/` | 체험단 목록, 배너 |
+| 회원가입 | `/signup` | 역할 선택 및 온보딩 |
+| 체험단 상세 | `/campaigns/[id]` | 체험단 정보 및 지원 |
+| 내 지원 목록 | `/my/applications` | 지원 현황 확인 |
+| 체험단 관리 | `/advertiser/campaigns` | 광고주 대시보드 |
+| 신청자 관리 | `/advertiser/campaigns/[id]` | 선정 및 모집 종료 |
 
-Supabase 설정
+## 데이터베이스 스키마
 
-```sh
-easynext supabase
-```
+- `user_profiles` - 사용자 공통 정보
+- `advertiser_profiles` - 광고주 전용 정보
+- `influencer_profiles` - 인플루언서 SNS 정보
+- `campaigns` - 체험단 정보
+- `applications` - 지원 내역
 
-Next-Auth 설정
+## 라이선스
 
-```sh
-easynext auth
+MIT
 
-# ID,PW 로그인
-easynext auth idpw
-# 카카오 로그인
-easynext auth kakao
-```
+## 기여
 
-유용한 서비스 연동
-
-```sh
-# Google Analytics
-easynext gtag
-
-# Microsoft Clarity
-easynext clarity
-
-# ChannelIO
-easynext channelio
-
-# Sentry
-easynext sentry
-
-# Google Adsense
-easynext adsense
-```
+이슈 및 Pull Request를 환영합니다!
