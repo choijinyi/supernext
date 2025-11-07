@@ -106,6 +106,9 @@ export default function SignupPage() {
   const handleFinalSubmit = async () => {
     const basicValues = basicForm.getValues();
 
+    console.log('=== Final Submit Started ===');
+    console.log('Role:', role);
+
     if (role === 'advertiser') {
       const advertiserValues = advertiserForm.getValues();
       const data: CompleteAdvertiserSignup = {
@@ -118,15 +121,24 @@ export default function SignupPage() {
         advertiser_profile: advertiserValues,
       };
 
+      console.log('Advertiser signup data:', { ...data, password: '***' });
+
       try {
-        await signupAdvertiser.mutateAsync(data);
+        console.log('Calling signupAdvertiser.mutateAsync...');
+        const result = await signupAdvertiser.mutateAsync(data);
+        console.log('Signup success:', result);
+        
         toast({
           title: '회원가입 완료',
           description: '광고주 회원가입이 완료되었습니다.',
         });
         router.push('/login');
       } catch (error: any) {
-        console.error('Advertiser signup error:', error);
+        console.error('=== Advertiser signup error ===');
+        console.error('Error object:', error);
+        console.error('Error response:', error?.response);
+        console.error('Error response data:', error?.response?.data);
+        
         const errorData = error?.response?.data;
         const errorMessage = errorData?.error?.message || errorData?.message || error?.message || '회원가입에 실패했습니다.';
         const errorDetails = errorData?.error?.details;
@@ -151,15 +163,24 @@ export default function SignupPage() {
         influencer_profile: influencerValues,
       };
 
+      console.log('Influencer signup data:', { ...data, password: '***' });
+
       try {
-        await signupInfluencer.mutateAsync(data);
+        console.log('Calling signupInfluencer.mutateAsync...');
+        const result = await signupInfluencer.mutateAsync(data);
+        console.log('Signup success:', result);
+        
         toast({
           title: '회원가입 완료',
           description: '인플루언서 회원가입이 완료되었습니다.',
         });
         router.push('/login');
       } catch (error: any) {
-        console.error('Influencer signup error:', error);
+        console.error('=== Influencer signup error ===');
+        console.error('Error object:', error);
+        console.error('Error response:', error?.response);
+        console.error('Error response data:', error?.response?.data);
+        
         const errorData = error?.response?.data;
         const errorMessage = errorData?.error?.message || errorData?.message || error?.message || '회원가입에 실패했습니다.';
         const errorDetails = errorData?.error?.details;
@@ -303,6 +324,9 @@ export default function SignupPage() {
                   disabled={signupAdvertiser.isPending}
                   className="flex-1"
                 >
+                  {signupAdvertiser.isPending && (
+                    <span className="mr-2 inline-block h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></span>
+                  )}
                   {signupAdvertiser.isPending ? '처리중...' : '가입완료'}
                 </Button>
               </div>
@@ -375,6 +399,9 @@ export default function SignupPage() {
                   disabled={signupInfluencer.isPending}
                   className="flex-1"
                 >
+                  {signupInfluencer.isPending && (
+                    <span className="mr-2 inline-block h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></span>
+                  )}
                   {signupInfluencer.isPending ? '처리중...' : '가입완료'}
                 </Button>
               </div>
