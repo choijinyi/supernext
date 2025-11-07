@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter } from 'next/navigation';
+import { z } from 'zod';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -22,6 +23,17 @@ import { useToast } from '@/hooks/use-toast';
 type SignupStep = 'role' | 'basic' | 'details';
 type UserRole = 'advertiser' | 'influencer';
 
+const basicInfoSchema = z.object({
+  name: z.string().min(2, '이름은 최소 2자 이상이어야 합니다'),
+  phone: z.string().min(10, '올바른 휴대폰 번호를 입력해주세요'),
+  email: z.string().email('올바른 이메일 형식이 아닙니다'),
+  password: z.string().min(8, '비밀번호는 최소 8자 이상이어야 합니다'),
+  confirmPassword: z.string().min(1, '비밀번호 확인을 입력해주세요'),
+  terms_agreed: z.boolean().refine((val) => val === true, '약관에 동의해야 합니다'),
+});
+
+type BasicInfo = z.infer<typeof basicInfoSchema>;
+
 export default function SignupPage() {
   const router = useRouter();
   const { toast } = useToast();
@@ -31,7 +43,9 @@ export default function SignupPage() {
   const signupAdvertiser = useSignupAdvertiser();
   const signupInfluencer = useSignupInfluencer();
 
-  const basicForm = useForm({
+  const basicForm = useForm<BasicInfo>({
+    resolver: zodResolver(basicInfoSchema),
+    mode: 'onBlur',
     defaultValues: {
       name: '',
       phone: '',
@@ -71,18 +85,31 @@ export default function SignupPage() {
   };
 
   const handleBasicInfoSubmit = async () => {
-    const values = basicForm.getValues();
+    console.log('=== Basic Info Submit ===');
     
-    if (!values.name || !values.phone || !values.email || !values.password) {
+    const isValid = await basicForm.trigger();
+    console.log('Form validation result:', isValid);
+    console.log('Form errors:', basicForm.formState.errors);
+    console.log('Form values:', basicForm.getValues());
+
+    if (!isValid) {
+      const errors = basicForm.formState.errors;
+      const firstError = Object.values(errors)[0];
       toast({
-        title: '오류',
-        description: '모든 필수 정보를 입력해주세요.',
+        title: '입력 오류',
+        description: firstError?.message || '입력 정보를 확인해주세요.',
         variant: 'destructive',
       });
       return;
     }
 
+    const values = basicForm.getValues();
+    
     if (values.password !== values.confirmPassword) {
+      basicForm.setError('confirmPassword', {
+        type: 'manual',
+        message: '비밀번호가 일치하지 않습니다.',
+      });
       toast({
         title: '오류',
         description: '비밀번호가 일치하지 않습니다.',
@@ -91,15 +118,7 @@ export default function SignupPage() {
       return;
     }
 
-    if (!values.terms_agreed) {
-      toast({
-        title: '오류',
-        description: '약관에 동의해주세요.',
-        variant: 'destructive',
-      });
-      return;
-    }
-
+    console.log('Validation passed, moving to details step');
     setStep('details');
   };
 
@@ -240,37 +259,57 @@ export default function SignupPage() {
               <div className="space-y-2">
                 <Label htmlFor="name">이름 *</Label>
                 <Input id="name" {...basicForm.register('name')} placeholder="홍길동" />
+                {basicForm.formState.errors.name && (
+                  <p className="text-sm text-red-500">{basicForm.formState.errors.name.message}</p>
+                )}
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="phone">휴대폰번호 *</Label>
                 <Input id="phone" {...basicForm.register('phone')} placeholder="010-1234-5678" />
+                {basicForm.formState.errors.phone && (
+                  <p className="text-sm text-red-500">{basicForm.formState.errors.phone.message}</p>
+                )}
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="email">이메일 *</Label>
                 <Input id="email" type="email" {...basicForm.register('email')} placeholder="example@example.com" />
+                {basicForm.formState.errors.email && (
+                  <p className="text-sm text-red-500">{basicForm.formState.errors.email.message}</p>
+                )}
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="password">비밀번호 *</Label>
                 <Input id="password" type="password" {...basicForm.register('password')} placeholder="최소 8자 이상" />
+                {basicForm.formState.errors.password && (
+                  <p className="text-sm text-red-500">{basicForm.formState.errors.password.message}</p>
+                )}
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="confirmPassword">비밀번호 확인 *</Label>
                 <Input id="confirmPassword" type="password" {...basicForm.register('confirmPassword')} placeholder="비밀번호 재입력" />
+                {basicForm.formState.errors.confirmPassword && (
+                  <p className="text-sm text-red-500">{basicForm.formState.errors.confirmPassword.message}</p>
+                )}
               </div>
 
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="terms"
-                  checked={basicForm.watch('terms_agreed')}
-                  onCheckedChange={(checked) => basicForm.setValue('terms_agreed', !!checked)}
-                />
-                <Label htmlFor="terms" className="cursor-pointer">
-                  이용약관 및 개인정보처리방침에 동의합니다 *
-                </Label>
+              <div className="space-y-2">
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="terms"
+                    checked={basicForm.watch('terms_agreed')}
+                    onCheckedChange={(checked) => basicForm.setValue('terms_agreed', !!checked)}
+                  />
+                  <Label htmlFor="terms" className="cursor-pointer">
+                    이용약관 및 개인정보처리방침에 동의합니다 *
+                  </Label>
+                </div>
+                {basicForm.formState.errors.terms_agreed && (
+                  <p className="text-sm text-red-500">{basicForm.formState.errors.terms_agreed.message}</p>
+                )}
               </div>
 
               <Separator />
