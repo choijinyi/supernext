@@ -24,11 +24,19 @@ export class PlatformService {
       const { data: authData, error: authError } = await this.supabase.auth.signUp({
         email,
         password,
+        options: {
+          data: {
+            name,
+            phone,
+            role: 'advertiser',
+          },
+          emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/login`,
+        },
       });
 
       if (authError || !authData.user) {
         this.logger.error('Advertiser signup failed', { error: authError });
-        return failure(400, PlatformError.SIGNUP_FAILED, '회원가입에 실패했습니다');
+        return failure(400, PlatformError.SIGNUP_FAILED, authError?.message || '회원가입에 실패했습니다');
       }
 
       const userId = authData.user.id;
@@ -74,11 +82,19 @@ export class PlatformService {
       const { data: authData, error: authError } = await this.supabase.auth.signUp({
         email,
         password,
+        options: {
+          data: {
+            name,
+            phone,
+            role: 'influencer',
+          },
+          emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/login`,
+        },
       });
 
       if (authError || !authData.user) {
         this.logger.error('Influencer signup failed', { error: authError });
-        return failure(400, PlatformError.SIGNUP_FAILED, '회원가입에 실패했습니다');
+        return failure(400, PlatformError.SIGNUP_FAILED, authError?.message || '회원가입에 실패했습니다');
       }
 
       const userId = authData.user.id;

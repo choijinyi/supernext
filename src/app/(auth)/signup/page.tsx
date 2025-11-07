@@ -125,10 +125,12 @@ export default function SignupPage() {
           description: '광고주 회원가입이 완료되었습니다.',
         });
         router.push('/login');
-      } catch (error) {
+      } catch (error: any) {
+        console.error('Advertiser signup error:', error);
+        const errorMessage = error?.response?.data?.message || error?.message || '회원가입에 실패했습니다.';
         toast({
           title: '오류',
-          description: '회원가입에 실패했습니다.',
+          description: errorMessage,
           variant: 'destructive',
         });
       }
@@ -151,10 +153,12 @@ export default function SignupPage() {
           description: '인플루언서 회원가입이 완료되었습니다.',
         });
         router.push('/login');
-      } catch (error) {
+      } catch (error: any) {
+        console.error('Influencer signup error:', error);
+        const errorMessage = error?.response?.data?.message || error?.message || '회원가입에 실패했습니다.';
         toast({
           title: '오류',
-          description: '회원가입에 실패했습니다.',
+          description: errorMessage,
           variant: 'destructive',
         });
       }

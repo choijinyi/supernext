@@ -7,7 +7,7 @@ export const signupBaseSchema = z.object({
   email: z.string().email('올바른 이메일 형식이 아닙니다'),
   password: z.string().min(8, '비밀번호는 최소 8자 이상이어야 합니다'),
   name: z.string().min(2, '이름은 최소 2자 이상이어야 합니다'),
-  phone: z.string().regex(/^01[0-9]-?[0-9]{3,4}-?[0-9]{4}$/, '올바른 휴대폰 번호 형식이 아닙니다'),
+  phone: z.string().min(10, '올바른 휴대폰 번호를 입력해주세요'),
   terms_agreed: z.boolean().refine((val) => val === true, '약관에 동의해야 합니다'),
 });
 
@@ -15,7 +15,7 @@ export const advertiserOnboardingSchema = z.object({
   business_name: z.string().min(2, '업체명은 최소 2자 이상이어야 합니다'),
   location: z.string().min(2, '위치를 입력해주세요'),
   category: z.string().min(1, '카테고리를 선택해주세요'),
-  business_registration_number: z.string().regex(/^\d{3}-\d{2}-\d{5}$/, '올바른 사업자등록번호 형식이 아닙니다 (예: 123-45-67890)'),
+  business_registration_number: z.string().min(10, '사업자등록번호를 입력해주세요'),
 });
 
 export const influencerOnboardingSchema = z.object({
