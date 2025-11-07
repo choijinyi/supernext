@@ -1,308 +1,225 @@
-"use client";
+'use client';
 
-import { useCallback, useMemo, useState } from "react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { Copy, CheckCircle2, Boxes, Database, LogOut, Server } from "lucide-react";
-import { getSupabaseBrowserClient } from "@/lib/supabase/browser-client";
-import { useCurrentUser } from "@/features/auth/hooks/useCurrentUser";
+import { useState } from 'react';
+import Link from 'next/link';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { useCampaigns } from '@/features/platform/hooks/usePlatform';
+import { format } from 'date-fns';
+import { ko } from 'date-fns/locale';
 
-type SetupCommand = {
-  id: string;
-  label: string;
-  command: string;
-};
+export default function HomePage() {
+  const [page, setPage] = useState(1);
+  const { data, isLoading } = useCampaigns({ status: 'recruiting', page, limit: 12 });
 
-const setupCommands: SetupCommand[] = [
-  { id: "install", label: "의존성 설치", command: "npm install" },
-  { id: "lint", label: "정적 점검", command: "npm run lint" },
-  { id: "dev", label: "로컬 개발 서버", command: "npm run dev" },
-];
-
-const envVariables = [
-  {
-    key: "SUPABASE_URL",
-    description: "Supabase 프로젝트 URL (https://...supabase.co)",
-  },
-  {
-    key: "SUPABASE_SERVICE_ROLE_KEY",
-    description:
-      "서버 전용 service-role 키. 절대 클라이언트로 노출하지 마세요.",
-  },
-];
-
-const directorySummary = [
-  {
-    title: "앱 라우터",
-    description: "Next.js App Router 엔트리포인트와 레이아웃 정의",
-    path: "src/app",
-  },
-  {
-    title: "Hono 엔트리포인트",
-    description: "Next.js Route Handler에서 Hono 앱을 위임",
-    path: "src/app/api/[[...hono]]",
-  },
-  {
-    title: "백엔드 구성요소",
-    description: "Hono 앱, 미들웨어, Supabase 서비스",
-    path: "src/backend",
-  },
-  {
-    title: "기능 모듈",
-    description: "각 기능별 DTO, 라우터, React Query 훅",
-    path: "src/features/[feature]",
-  },
-];
-
-const backendBuildingBlocks = [
-  {
-    icon: <Server className="w-4 h-4" />,
-    title: "Hono 앱 구성",
-    description:
-      "errorBoundary → withAppContext → withSupabase → registerExampleRoutes 순서로 미들웨어와 라우터를 조립합니다.",
-  },
-  {
-    icon: <Database className="w-4 h-4" />,
-    title: "Supabase 서비스",
-    description:
-      "service-role 키로 생성한 서버 클라이언트를 사용하고, 쿼리 결과는 ts-pattern으로 분기 가능한 결과 객체로 반환합니다.",
-  },
-  {
-    icon: <Boxes className="w-4 h-4" />,
-    title: "React Query 연동",
-    description:
-      "모든 클라이언트 데이터 패칭은 useExampleQuery와 같은 React Query 훅을 통해 수행하며, DTO 스키마로 응답을 검증합니다.",
-  },
-];
-
-export default function Home() {
-  const [copiedCommand, setCopiedCommand] = useState<string | null>(null);
-  const { user, isAuthenticated, isLoading, refresh } = useCurrentUser();
-  const router = useRouter();
-
-  const handleSignOut = useCallback(async () => {
-    const supabase = getSupabaseBrowserClient();
-    await supabase.auth.signOut();
-    await refresh();
-    router.replace("/");
-  }, [refresh, router]);
-
-  const authActions = useMemo(() => {
-    if (isLoading) {
-      return (
-        <span className="text-sm text-slate-300">세션 확인 중...</span>
-      );
-    }
-
-    if (isAuthenticated && user) {
-      return (
-        <div className="flex items-center gap-3 text-sm text-slate-200">
-          <span className="truncate">{user.email ?? "알 수 없는 사용자"}</span>
-          <div className="flex items-center gap-2">
-            <Link
-              href="/dashboard"
-              className="rounded-md border border-slate-600 px-3 py-1 transition hover:border-slate-400 hover:bg-slate-800"
-            >
-              대시보드
+  return (
+    <div className="min-h-screen flex flex-col">
+      {/* Header */}
+      <header className="border-b sticky top-0 bg-background z-50">
+        <div className="container mx-auto px-4 h-16 flex items-center justify-between">
+          <Link href="/">
+            <h1 className="text-2xl font-bold">블로그 체험단</h1>
+          </Link>
+          <nav className="flex gap-4 items-center">
+            <Link href="/campaigns">
+              <Button variant="ghost">체험단 목록</Button>
             </Link>
-            <button
-              type="button"
-              onClick={handleSignOut}
-              className="flex items-center gap-1 rounded-md bg-slate-100 px-3 py-1 text-slate-900 transition hover:bg-white"
-            >
-              <LogOut className="h-4 w-4" />
-              로그아웃
-            </button>
-          </div>
+            <Link href="/my/applications">
+              <Button variant="ghost">내 지원 목록</Button>
+            </Link>
+            <Link href="/advertiser/campaigns">
+              <Button variant="ghost">체험단 관리</Button>
+            </Link>
+            <Link href="/login">
+              <Button variant="outline">로그인</Button>
+            </Link>
+            <Link href="/signup">
+              <Button>회원가입</Button>
+            </Link>
+          </nav>
         </div>
-      );
-    }
+      </header>
 
-    return (
-      <div className="flex items-center gap-3 text-sm">
-        <Link
-          href="/login"
-          className="rounded-md border border-slate-600 px-3 py-1 text-slate-200 transition hover:border-slate-400 hover:bg-slate-800"
-        >
-          로그인
-        </Link>
-        <Link
-          href="/signup"
-          className="rounded-md bg-slate-100 px-3 py-1 text-slate-900 transition hover:bg-white"
-        >
-          회원가입
-        </Link>
-      </div>
-    );
-  }, [handleSignOut, isAuthenticated, isLoading, user]);
-
-  const handleCopy = (command: string) => {
-    navigator.clipboard.writeText(command);
-    setCopiedCommand(command);
-    window.setTimeout(() => setCopiedCommand(null), 2000);
-  };
-
-  return (
-    <main className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 text-white">
-      <div className="mx-auto flex w-full max-w-6xl flex-col gap-10 px-6 py-16">
-        <div className="flex items-center justify-between rounded-xl border border-slate-700 bg-slate-900/80 px-6 py-4">
-          <div className="text-sm font-medium text-slate-300">
-            SuperNext — 구조적인 Next.js + Supabase 템플릿
-          </div>
-          {authActions}
-        </div>
-        <header className="space-y-4">
-          <h1 className="text-4xl font-semibold tracking-tight md:text-5xl">
-            SuperNext 프로젝트 설정 & 구조 안내서
-          </h1>
-          <p className="max-w-3xl text-base text-slate-300 md:text-lg">
-            React Query / Hono.js / Supabase를 사용합니다.
-            <br /> 모든 컴포넌트는 Client Component로 작성합니다.
-          </p>
-        </header>
-
-        <section className="grid gap-8 md:grid-cols-2">
-          <SetupChecklist copiedCommand={copiedCommand} onCopy={handleCopy} />
-          <EnvironmentGuide />
-        </section>
-
-        <section className="grid gap-8 md:grid-cols-2">
-          <DirectoryOverview />
-          <BackendOverview />
-        </section>
-
-        <footer className="rounded-xl border border-slate-700 bg-slate-900/60 p-6">
-          <h2 className="text-lg font-semibold text-slate-100">
-            Supabase Migration
-          </h2>
-          <p className="mt-2 text-sm text-slate-300">
-            `supabase/migrations/20250227000100_create_example_table.sql` 파일을
-            Supabase 대시보드 SQL Editor에 업로드하여 `public.example` 테이블과
-            샘플 데이터를 생성하세요. 서비스 역할 키는 서버 환경 변수에만
-            저장하고, React Query 훅에서는 공개 API만 호출합니다.
-          </p>
-        </footer>
-      </div>
-    </main>
-  );
-}
-
-function SetupChecklist({
-  copiedCommand,
-  onCopy,
-}: {
-  copiedCommand: string | null;
-  onCopy: (command: string) => void;
-}) {
-  return (
-    <div className="space-y-4 rounded-xl border border-slate-700 bg-slate-900/60 p-6">
-      <h2 className="text-lg font-semibold text-slate-100">
-        SuperNext 설치 체크리스트
-      </h2>
-      <ul className="space-y-3">
-        {setupCommands.map((item) => (
-          <li key={item.id} className="flex items-start justify-between gap-3">
-            <div className="flex items-start gap-3">
-              <CheckCircle2 className="mt-1 h-5 w-5 text-emerald-400" />
-              <div>
-                <p className="font-medium text-slate-100">{item.label}</p>
-                <code className="text-sm text-slate-300">{item.command}</code>
-              </div>
+      {/* Hero Banner */}
+      <section className="bg-gradient-to-r from-purple-500 to-pink-500 text-white">
+        <div className="container mx-auto px-4 py-20">
+          <div className="max-w-3xl">
+            <h2 className="text-4xl font-bold mb-4">
+              블로그 체험단 플랫폼
+            </h2>
+            <p className="text-xl mb-8">
+              광고주와 인플루언서를 연결하는 가장 쉬운 방법
+            </p>
+            <div className="flex gap-4">
+              <Link href="/signup">
+                <Button size="lg" variant="secondary">
+                  지금 시작하기
+                </Button>
+              </Link>
+              <Link href="/campaigns">
+                <Button size="lg" variant="outline" className="bg-transparent text-white border-white hover:bg-white/10">
+                  체험단 둘러보기
+                </Button>
+              </Link>
             </div>
-            <button
-              type="button"
-              onClick={() => onCopy(item.command)}
-              className="flex items-center gap-1 rounded-md border border-slate-700 px-2 py-1 text-xs text-slate-200 transition hover:border-slate-500 hover:bg-slate-800"
-            >
-              <Copy className="h-3.5 w-3.5" />
-              {copiedCommand === item.command ? "복사됨" : "복사"}
-            </button>
-          </li>
-        ))}
-      </ul>
-      <p className="text-xs text-slate-400">
-        개발 서버는 React Query Provider가 설정된 `src/app/providers.tsx`를
-        통과하여 실행됩니다.
-      </p>
-    </div>
-  );
-}
+          </div>
+        </div>
+      </section>
 
-function EnvironmentGuide() {
-  return (
-    <div className="space-y-4 rounded-xl border border-slate-700 bg-slate-900/60 p-6">
-      <h2 className="text-lg font-semibold text-slate-100">환경 변수</h2>
-      <p className="text-sm text-slate-300">
-        `.env.local` 파일에 아래 값을 추가하고, service-role 키는 서버 빌드
-        환경에서만 주입하세요.
-      </p>
-      <ul className="space-y-3">
-        {envVariables.map((item) => (
-          <li
-            key={item.key}
-            className="rounded-lg border border-slate-800 bg-slate-950/50 p-3"
-          >
-            <p className="font-medium text-slate-100">{item.key}</p>
-            <p className="text-xs text-slate-300">{item.description}</p>
-          </li>
-        ))}
-      </ul>
-      <p className="text-xs text-slate-400">
-        환경 스키마는 `src/backend/config/index.ts`에서 zod로 검증되며, 누락 시
-        명확한 오류를 발생시킵니다.
-      </p>
-    </div>
-  );
-}
-
-function DirectoryOverview() {
-  return (
-    <div className="space-y-4 rounded-xl border border-slate-700 bg-slate-900/60 p-6">
-      <h2 className="text-lg font-semibold text-slate-100">
-        SuperNext 주요 디렉터리
-      </h2>
-      <ul className="space-y-3">
-        {directorySummary.map((item) => (
-          <li
-            key={item.path}
-            className="rounded-lg border border-slate-800 bg-slate-950/50 p-3"
-          >
-            <p className="text-sm font-semibold text-slate-100">{item.path}</p>
-            <p className="text-xs text-slate-300">{item.description}</p>
-            <p className="text-xs text-slate-400">{item.title}</p>
-          </li>
-        ))}
-      </ul>
-    </div>
-  );
-}
-
-function BackendOverview() {
-  return (
-    <div className="space-y-4 rounded-xl border border-slate-700 bg-slate-900/60 p-6">
-      <h2 className="text-lg font-semibold text-slate-100">
-        SuperNext 백엔드 빌딩 블록
-      </h2>
-      <ul className="space-y-3">
-        {backendBuildingBlocks.map((item, index) => (
-          <li
-            key={item.title + index}
-            className="flex items-start gap-3 rounded-lg border border-slate-800 bg-slate-950/50 p-3"
-          >
-            <div className="mt-0.5 text-indigo-300">{item.icon}</div>
+      {/* Stats Section */}
+      <section className="py-12 bg-muted/50">
+        <div className="container mx-auto px-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
             <div>
-              <p className="font-medium text-slate-100">{item.title}</p>
-              <p className="text-xs text-slate-300">{item.description}</p>
+              <div className="text-4xl font-bold text-primary mb-2">1,234</div>
+              <div className="text-muted-foreground">진행중인 체험단</div>
             </div>
-          </li>
-        ))}
-      </ul>
-      <p className="text-xs text-slate-400">
-        예시 라우터는 `src/features/example/backend/route.ts`, 서비스 로직은
-        `src/features/example/backend/service.ts`, 공통 스키마는
-        `src/features/example/backend/schema.ts`에서 관리하며 Supabase
-        `public.example` 테이블과 통신합니다.
-      </p>
+            <div>
+              <div className="text-4xl font-bold text-primary mb-2">5,678</div>
+              <div className="text-muted-foreground">활동 인플루언서</div>
+            </div>
+            <div>
+              <div className="text-4xl font-bold text-primary mb-2">9,876</div>
+              <div className="text-muted-foreground">누적 리뷰</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Campaigns Section */}
+      <section className="py-16">
+        <div className="container mx-auto px-4">
+          <div className="flex justify-between items-center mb-8">
+            <div>
+              <h2 className="text-3xl font-bold mb-2">모집 중인 체험단</h2>
+              <p className="text-muted-foreground">지금 바로 지원 가능한 체험단을 확인하세요</p>
+            </div>
+            <Link href="/campaigns">
+              <Button variant="outline">전체 보기</Button>
+            </Link>
+          </div>
+
+          {isLoading ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {[1, 2, 3, 4, 5, 6].map((i) => (
+                <Card key={i} className="animate-pulse">
+                  <CardHeader>
+                    <div className="h-6 bg-muted rounded" />
+                    <div className="h-4 bg-muted rounded w-3/4" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="h-20 bg-muted rounded" />
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : data?.data?.campaigns && data.data.campaigns.length > 0 ? (
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {data.data.campaigns.map((campaign: any) => (
+                  <Link href={`/campaigns/${campaign.id}`} key={campaign.id}>
+                    <Card className="h-full hover:shadow-lg transition-shadow cursor-pointer">
+                      <CardHeader>
+                        <div className="flex justify-between items-start mb-2">
+                          <Badge variant="secondary">모집중</Badge>
+                          <span className="text-sm text-muted-foreground">
+                            {campaign.user_profiles?.advertiser_profiles?.[0]?.business_name || '광고주'}
+                          </span>
+                        </div>
+                        <CardTitle className="line-clamp-2">{campaign.title}</CardTitle>
+                        <CardDescription className="line-clamp-1">
+                          {campaign.user_profiles?.advertiser_profiles?.[0]?.location || ''}
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-2 text-sm">
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">모집 인원</span>
+                            <span className="font-semibold">{campaign.recruitment_count}명</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">마감일</span>
+                            <span className="font-semibold">
+                              {format(new Date(campaign.recruitment_end_date), 'M월 d일', { locale: ko })}
+                            </span>
+                          </div>
+                          <div className="mt-4 p-3 bg-muted rounded-md">
+                            <p className="text-xs text-muted-foreground mb-1">혜택</p>
+                            <p className="font-medium line-clamp-2">{campaign.benefits}</p>
+                          </div>
+                        </div>
+                      </CardContent>
+                      <CardFooter>
+                        <Button className="w-full" variant="outline">
+                          자세히 보기
+                        </Button>
+                      </CardFooter>
+                    </Card>
+                  </Link>
+                ))}
+              </div>
+
+              {data.data.total_pages > 1 && (
+                <div className="flex justify-center gap-2 mt-8">
+                  <Button
+                    variant="outline"
+                    disabled={page === 1}
+                    onClick={() => setPage(page - 1)}
+                  >
+                    이전
+                  </Button>
+                  <span className="flex items-center px-4">
+                    {page} / {data.data.total_pages}
+                  </span>
+                  <Button
+                    variant="outline"
+                    disabled={page >= data.data.total_pages}
+                    onClick={() => setPage(page + 1)}
+                  >
+                    다음
+                  </Button>
+                </div>
+              )}
+            </>
+          ) : (
+            <div className="text-center py-12">
+              <p className="text-muted-foreground">현재 모집 중인 체험단이 없습니다.</p>
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      <section className="py-16 bg-primary text-primary-foreground">
+        <div className="container mx-auto px-4 text-center">
+          <h2 className="text-3xl font-bold mb-4">
+            지금 바로 시작하세요
+          </h2>
+          <p className="text-xl mb-8 opacity-90">
+            광고주도, 인플루언서도 쉽게 사용할 수 있습니다
+          </p>
+          <div className="flex gap-4 justify-center">
+            <Link href="/signup">
+              <Button size="lg" variant="secondary">
+                광고주로 시작하기
+              </Button>
+            </Link>
+            <Link href="/signup">
+              <Button size="lg" variant="outline" className="bg-transparent border-primary-foreground hover:bg-primary-foreground/10">
+                인플루언서로 시작하기
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="border-t py-8">
+        <div className="container mx-auto px-4 text-center text-sm text-muted-foreground">
+          <p>&copy; 2024 블로그 체험단. All rights reserved.</p>
+        </div>
+      </footer>
     </div>
   );
 }
